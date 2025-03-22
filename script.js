@@ -1,20 +1,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBgSruvz9mP4VWdyXDlz4v39JY62JwDWXE",
-    authDomain: "cmmskr2002.firebaseapp.com",
-    projectId: "cmmskr2002",
-    storageBucket: "cmmskr2002.firebasestorage.app",
-    messagingSenderId: "679863056081",
-    appId: "1:679863056081:web:d201489d80940a3025b7f0",
-    measurementId: "G-709LXJ7VRV"
+    apiKey: "AIzaSyCU7zzXKmd079Me-7ds2grJ6HD8dSwDidA",
+    authDomain: "skyiee.firebaseapp.com",
+    projectId: "skyiee",
+    storageBucket: "skyiee.appspot.com",
+    messagingSenderId: "985209933455",
+    appId: "1:985209933455:web:5635141c298bdd5167aafa",
+    measurementId: "G-5T40LG9HXW"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const analytics = getAnalytics(app);
 
 function validatePassword(password) {
     const minLength = 8;
@@ -41,7 +39,6 @@ function validatePassword(password) {
     return "";
 }
 
-// signup
 function signUp() {
     const email = document.getElementById("signup-email").value.trim();
     const password = document.getElementById("signup-password").value.trim();
@@ -65,7 +62,6 @@ function signUp() {
         isValid = false;
     }
 
-    // validate pass strength
     const passwordValidationMessage = validatePassword(password);
     if (passwordValidationMessage) {
         passwordError.innerText = passwordValidationMessage;
@@ -82,8 +78,9 @@ function signUp() {
             sendEmailVerification(user)
                 .then(() => {
                     alert("A verification email has been sent. Please check your inbox.");
-                    document.getElementById("signup-form").style.display = "none";
-                    document.getElementById("verification-message").style.display = "block";
+                    document.getElementById("signup-form").classList.add('hidden');
+                    document.getElementById("signup-formtxt").classList.add('hidden');
+                    document.getElementById("verification-message").classList.remove('hidden');
                 })
                 .catch((error) => {
                     emailError.innerText = error.message;
@@ -96,7 +93,6 @@ function signUp() {
         });
 }
 
-// login
 function login() {
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value.trim();
@@ -135,34 +131,82 @@ function toggleForm() {
     const loginForm = document.getElementById("login-form");
     const loginFormtxt = document.getElementById("login-formtxt");
     const formTitle = document.getElementById("form-title");
-    const switchText = document.querySelector('.switch-text a');
     const verifyForm = document.getElementById("verification-message");
 
-    if (signupForm.style.display === "none") {
-        signupForm.style.display = "block";
-        signupFormtxt.style.display = "block";
-        loginForm.style.display = "none";
-        loginFormtxt.style.display = "none";
-        verifyForm.style.display = "none";
+    if (signupForm.classList.contains('hidden')) {
+        loginForm.classList.add('fade-out');
+        loginFormtxt.classList.add('fade-out');
+
+        setTimeout(() => {
+            loginForm.classList.add('hidden');
+            loginFormtxt.classList.add('hidden');
+            signupForm.classList.remove('hidden');
+            signupFormtxt.classList.remove('hidden');
+
+            signupForm.classList.remove('fade-out');
+            signupForm.classList.add('fade-in');
+            signupFormtxt.classList.remove('fade-out');
+            signupFormtxt.classList.add('fade-in');
+        }, 400);
+
+        verifyForm.classList.add('hidden');
         formTitle.innerText = "Create Account";
-        switchText.innerText = "Already have an account?";
     } else {
-        signupForm.style.display = "none";
-        signupFormtxt.style.display = "none";
-        loginForm.style.display = "block";
-        loginFormtxt.style.display = "block";
-        verifyForm.style.display = "none";
+        signupForm.classList.add('fade-out');
+        signupFormtxt.classList.add('fade-out');
+
+        setTimeout(() => {
+            signupForm.classList.add('hidden');
+            signupFormtxt.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            loginFormtxt.classList.remove('hidden');
+
+            loginForm.classList.remove('fade-out');
+            loginForm.classList.add('fade-in');
+            loginFormtxt.classList.remove('fade-out');
+            loginFormtxt.classList.add('fade-in');
+        }, 400);
+
+        verifyForm.classList.add('hidden');
         formTitle.innerText = "Sign In";
-        switchText.innerText = "Dont have an account yet?";
     }
 }
 
 function showLogin() {
-    document.getElementById("verification-message").style.display = "none";
-    document.getElementById("login-form").style.display = "block";
+    document.getElementById("verification-message").classList.add('hidden');
+    document.getElementById("login-form").classList.remove('hidden');
 }
+
+let resendCooldown = false;
+
+function resendVerification() {
+    if (resendCooldown) {
+        alert("Please wait before resending the verification email.");
+        return;
+    }
+
+    const user = auth.currentUser;
+    if (user) {
+        sendEmailVerification(user)
+            .then(() => {
+                alert("Verification email resent. Please check your inbox.");
+                resendCooldown = true;
+                setTimeout(() => {
+                    resendCooldown = false;
+                }, 60000); // 60-second cooldown
+            })
+            .catch((error) => {
+                alert("Error resending verification email: " + error.message);
+            });
+    } else {
+        alert("No user found. Please sign up again.");
+    }
+}
+
+document.getElementById("signup-button").addEventListener("click", signUp);
+document.getElementById("login-button").addEventListener("click", login);
+document.getElementById("resend-button").addEventListener("click", resendVerification);
 
 window.toggleForm = toggleForm;
 window.showLogin = showLogin;
-window.signUp = signUp;
-window.login = login;
+window.resendVerification = resendVerification;
